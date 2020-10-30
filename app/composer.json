@@ -1,0 +1,24 @@
+{
+    "name": "harpya/sample-application-ip",
+    "description": "Application to show how to integrate with Identity Provider.",
+    "type": "project",
+    "license": "MIT",
+    "authors": [{
+        "name": "Eduardo Luz",
+        "email": "eduardo@eduardo-luz.com"
+    }],
+    "autoload": {
+        "psr-4": {
+            "Harpya\\demo\\": "src/"
+        }
+    },
+    "require": {
+        "php": ">=7.2",
+        "harpya/sdk": "^0.0.2",
+        "vlucas/phpdotenv": "^4.0",
+        "altorouter/altorouter": "^2.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^8.5"
+    }
+}
