@@ -20,6 +20,82 @@ This repository intends to be a sample of application using the Harpya Identity 
 Edit the files ``.env``, ``ip.env`` and ``app.env`` according to your environment.
 
 
+4. Start the containers
+
+    docker-compose up -d
+
+Double check if everything is up and running
+
+    docker-compose ps
+
+
+5. Create an App entry on Identity Provider instance
+
+To access the Identity Provider, is necessary register each application which will make calls to it there.    
+
+    docker-compose exec app_identity_provider bin/harpya app add demo --name="My 1st application"
+
+The output should be something like:
+
+user$ docker-compose exec app_identity_provider bin/harpya app add demo --name="My 1st application"
+
+Success!
+Your secret token is 3170b820f961ac3721cc62388e4f2396be90f9abf5b00784426f1d762747ca43 . Copy it and keep it safe, since will not be possible recover later.
+
+
+
+Now you have your application 'demo' created. Copy the secret token in a safe place.
+
+6. Configure your application's ``.env`` file
+
+Inside your application's folder, should have a file ``.env``, with some configuration it uses. 
+
+```
+    ~\
+      + docker-compose.yaml
+      + app.env
+      + ip.env
+      .
+      .
+      .
+      + <app>
+          + .env      <---- your internal application's configuration
+
+```
+
+Edit this file and add these entries:
+
+
+
+```
+HSDK_IP_INTERNAL_URL=<URL for IP's webserver>
+HSDK_IP_EXTERNAL_URL=<external URL (with port) of IP>
+
+HSDK_APP_ID=<application id - informed when in it's creation>
+HSDK_APP_SECRET=<secret token>
+
+HSDK_APP_BASE_URL=<URL from default application >
+HSDK_APP_AUTH_PATH=<Application's route which IP uses to interact with it >
+
+```
+
+For example:
+```
+HSDK_IP_INTERNAL_URL=http://web_identity_provider
+HSDK_IP_EXTERNAL_URL=http://localhost:3883
+
+HSDK_APP_ID=demo
+HSDK_APP_SECRET=3170b820f961ac3721cc62388e4f2396be90f9abf5b00784426f1d762747ca43
+
+HSDK_APP_BASE_URL=http://web
+HSDK_APP_AUTH_PATH=/authorize/
+
+```
+
+
+
+
+
 ## Configuration
 
 ### .env
