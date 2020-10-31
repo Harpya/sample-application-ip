@@ -20,7 +20,7 @@ services:
 # Application
 #         
   app_identity_provider:
-    image: harpya/app_identity_provider:0.0.18
+    image: harpya/app_identity_provider:0.0.19
     env_file: 
       - ip.env    
     working_dir: ${IP_PHP_APP_DIR}
