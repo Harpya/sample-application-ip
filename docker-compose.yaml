@@ -1,28 +1,26 @@
 version: "3"
 
 services:
-
-#
-# Webserver
-#           
+  #
+  # Webserver
+  #
   web_identity_provider:
-    image: harpya/web_identity_provider:0.0.17
-    env_file: 
-      - ip.env     
+    image: harpya/web_identity_provider:0.0.20
+    env_file:
+      - ip.env
     ports:
       - "${IP_WEB_EXPOSED_PORT}:80"
     #   - "${WEBSERVER_SSL_EXPOSED_PORT}:443"
     networks:
       demo_1_net:
 
-
-#
-# Application
-#         
+  #
+  # Application
+  #
   app_identity_provider:
-    image: harpya/app_identity_provider:0.0.19
-    env_file: 
-      - ip.env    
+    image: harpya/app_identity_provider:0.0.20
+    env_file:
+      - ip.env
     working_dir: ${IP_PHP_APP_DIR}
     depends_on:
       - web_identity_provider
@@ -30,38 +28,60 @@ services:
     networks:
       demo_1_net:
 
-#
-# Transactional DB
-#
+  #
+  # Transactional DB
+  #
   db_identity_provider:
     build:
       context: .docker
       dockerfile: db-timescale/Dockerfile
-    env_file: 
-      - ip.env 
+    env_file:
+      - ip.env
     volumes:
       - vol_db_identity_provider:/var/lib/postgresql/data
     networks:
       demo_1_net:
-    
-#
-# Web IDE to access db_transactional
-#
+
+  #
+  # Web IDE to access db_transactional
+  #
   adminer:
     image: adminer
     restart: always
     ports:
-      - 42345:8080
+      - ${ADMINER_EXPOSED_PORT}:8080
     networks:
       demo_1_net:
-  
 
+  #
+  # Web IDE to access db_transactional
+  #
+  zabbix-agent:
+    build:
+      dockerfile: Dockerfile
+      context: .docker/zabbix-agent/
+    # image: zabbix/zabbix-agent
+    restart: always
+    environment:
+      # ZBX_ACTIVESERVERS: 10.1.0.1,10.1.0.8
+      # ZBX_ACTIVESERVERS: host.docker.internal
+      # ZBX_PASSIVESERVERS: host.docker.internal,10.1.0.1,10.1.0.8
+      ZBX_PASSIVESERVERS: 10.1.0.1,10.1.0.8
+      ZBX_SERVER_HOST: host.docker.internal
+      ZBX_HOSTNAME: zabbix_agent
+      # ZBX_PASSIVE_ALLOW: 1
+      # ZBX_ACTIVE_ALLOW: 0
+    ports:
+      - ${ZABBIX_AGENT_PORT}:10050
+    volumes:
+      - ./zabbix/:/etc/zabbix/
+      - vol_shared_logs:/srv/logs
+    networks:
+      demo_1_net:
 
-
-
-#
-# Webserver
-#           
+  #
+  # Webserver
+  #
   web:
     build:
       context: .docker/web
@@ -72,68 +92,66 @@ services:
     ports:
       - "${APP_WEB_EXPOSED_PORT}:80"
     #   - "${WEBSERVER_SSL_EXPOSED_PORT}:443"
-    env_file: 
-      - app.env 
+    env_file:
+      - app.env
     volumes:
       - ./app:/var/www/html
+      - vol_shared_logs:/srv/logs
     networks:
       demo_1_net:
 
-
   #
   # Application
-  #         
+  #
   app:
     build:
-      context: .docker
-      dockerfile: php-debug/Dockerfile
-      args:
-        - WEB_USER=www-data
-        - WEB_GROUP=www-data
-        - APACHE_ROOT_DIR=/usr/local/apache2
-        - PHP_ROOT_DIR=/usr/local/etc
-        - XDEBUG_PORT=19001
+      context: .
+      dockerfile: .docker/app/Dockerfile
+    #   args:
+    #     - WEB_USER=www-data
+    #     - WEB_GROUP=www-data
+    #     - APACHE_ROOT_DIR=/usr/local/apache2
+    #     - PHP_ROOT_DIR=/usr/local/etc
+    #     - XDEBUG_PORT=${XDEBUG_PORT}
     working_dir: /var/www/html
     depends_on:
       - web
     volumes:
       - ./app:/var/www/html
-    env_file: 
-      - app.env 
+      # - ./logs:/tmp/logs
+      - vol_shared_logs:/srv/logs
+    env_file:
+      - app.env
     networks:
       demo_1_net:
 
-
-
-
-#
-# Transactional DB
-#
+  #
+  # Transactional DB
+  #
   db:
     build:
       context: .docker
       dockerfile: db-timescale/Dockerfile
-    env_file: 
-      - app.env 
+    env_file:
+      - app.env
     volumes:
       - vol_db_app:/var/lib/postgresql/data
+      - vol_shared_logs:/srv/logs
     networks:
       demo_1_net:
-  
-
 
   mailer:
     image: schickling/mailcatcher
     ports:
-      - "18888:1080"
+      - "${MAILER_WEB_EXPOSED_PORT}:1080"
+      - "${MAILER_SMTP_EXPOSED_PORT}:1025"
     networks:
       demo_1_net:
-  
-
 
 volumes:
   vol_db_app:
-  vol_db_identity_provider:  
+  vol_db_identity_provider:
+  vol_shared_logs:
 
 networks:
   demo_1_net:
