@@ -1,17 +1,20 @@
 FROM d9magai/http2apache:latest
 
-# EXPOSE 443
+
+
 EXPOSE 80
 
-COPY apache.conf /usr/local/apache2/conf/extra/httpd-ssl.conf
+COPY httpd.conf /usr/local/apache2/conf/httpd.conf
+
+RUN mkdir /usr/local/apache2/conf/conf.d && mkdir /usr/local/apache2/conf/sites.d
+
+COPY conf.d/* /usr/local/apache2/conf/conf.d/
+COPY sites.d/* /usr/local/apache2/conf/sites.d/
 
 RUN adduser www-data
 
-# /usr/local/apache2/bin/httpd
-
 COPY start.sh /tmp
-# /usr/bin
+
 RUN chmod 755 /tmp/start.sh
-# RUN chmod +x /usr/bin/start.sh
 
 ENTRYPOINT [ "/tmp/start.sh" ]
